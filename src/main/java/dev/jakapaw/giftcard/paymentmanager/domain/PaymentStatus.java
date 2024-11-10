@@ -5,5 +5,6 @@ public enum PaymentStatus {
     VERIFIED,
     ON_PROCESS,
     PROCESSED,
-    COMPLETED
+    COMPLETED,
+    DECLINED
 }

@@ -1,4 +1,4 @@
-package dev.jakapaw.giftcard.paymentmanager.api.dto;
+package dev.jakapaw.giftcard.paymentmanager.rest.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public class InitiatePayment{
 
-    String giftcardId;
+    String giftcardSerialNumber;
     String merchantId;
     double billed;
 }

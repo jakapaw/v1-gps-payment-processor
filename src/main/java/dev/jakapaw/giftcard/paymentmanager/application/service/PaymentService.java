@@ -1,33 +1,76 @@
 package dev.jakapaw.giftcard.paymentmanager.application.service;
 
-import dev.jakapaw.giftcard.paymentmanager.application.command.InitializePaymentCommand;
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
+import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
+import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
+import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 public class PaymentService implements ApplicationEventPublisherAware {
 
     ApplicationEventPublisher applicationEventPublisher;
+    KafkaProducer kafkaProducer;
+    PaymentOrchestrator paymentOrchestrator;
 
-    public String initiatePayment(String giftcardId, String merchantId, double billed) {
+    public PaymentService(KafkaProducer kafkaProducer, PaymentOrchestrator paymentOrchestrator) {
+        this.kafkaProducer = kafkaProducer;
+        this.paymentOrchestrator = paymentOrchestrator;
+    }
+
+    @Async
+    public CompletableFuture<Payment> initiatePayment(String giftcardSerialNumber, String merchantId, double billed) {
         String paymentId = generatePaymentId(merchantId);
-        InitializePaymentCommand command = new InitializePaymentCommand(
+        Payment payment = new Payment(
                 paymentId,
-                giftcardId,
+                giftcardSerialNumber,
                 merchantId,
-                billed
+                billed,
+                LocalDateTime.now(),
+                PaymentStatus.ON_VERIFICATION
         );
-        applicationEventPublisher.publishEvent(command);
-        return PaymentStatus.ON_VERIFICATION.name();
+        kafkaProducer.publishVerificationEvent(payment);
+
+        CompletableFuture<Payment> completableFuture = new CompletableFuture<>();
+        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+            executorService.submit(() -> {
+                // make thread wait for payment transaction to complete
+                while (!paymentOrchestrator.isPaymentComplete(paymentId)) {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ignored) {}
+                };
+                Payment paymentFinished = paymentOrchestrator.removeOngoingPayment(paymentId);
+                completableFuture.complete(paymentFinished);
+            });
+        }
+        return completableFuture;
     }
 
     private String generatePaymentId(String merchantId) {
         Random random = new Random();
         return merchantId + String.format("%02d", random.nextLong(10000,1000000));
+    }
+
+    public void declinePayment(String paymentId) {
+        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentStatus.COMPLETED);
+        applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
+    }
+
+    public void completePayment(String paymentId) {
+        PaymentCompleted event = new PaymentCompleted(paymentId, PaymentStatus.COMPLETED);
+        applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
     }
 
     @Override
