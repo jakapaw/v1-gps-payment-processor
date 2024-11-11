@@ -1,5 +1,6 @@
 package dev.jakapaw.giftcard.paymentmanager.rest;
 
+import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.service.PaymentService;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.InitiatePayment;
@@ -23,8 +24,10 @@ public class MainController {
 
     @PostMapping("/initiate")
     public PaymentDetailDTO initiatePayment(@RequestBody InitiatePayment data) throws ExecutionException, InterruptedException {
-        Payment paymentResult = paymentService.initiatePayment(
-                data.getGiftcardSerialNumber(), data.getMerchantId(), data.getBilled()).get();
+        InitiatePaymentCommand command = new InitiatePaymentCommand(
+                data.getGiftcardSerialNumber(), data.getMerchantId(), data.getBilled()
+        );
+        Payment paymentResult = paymentService.initiatePayment(command).get();
 
         return new PaymentDetailDTO(
                 paymentResult.getPaymentId(),
