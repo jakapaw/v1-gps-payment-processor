@@ -2,7 +2,6 @@ package dev.jakapaw.giftcard.paymentmanager.application.service;
 
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
-import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;

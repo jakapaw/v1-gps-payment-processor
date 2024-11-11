@@ -2,13 +2,11 @@ package dev.jakapaw.giftcard.paymentmanager.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.beans.Transient;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Getter

@@ -62,7 +62,7 @@ public class PaymentService implements ApplicationEventPublisherAware {
                     try {
                         Thread.sleep(10);
                     } catch (InterruptedException ignored) {}
-                };
+                }
                 Payment paymentFinished = paymentOrchestrator.removeOngoingPayment(paymentId);
                 paymentEventDatastore.saveAll(paymentFinished.getPaymentEvents());
                 paymentFinished.clearEvents();
