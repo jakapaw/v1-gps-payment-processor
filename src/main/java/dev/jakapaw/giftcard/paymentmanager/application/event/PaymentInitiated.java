@@ -1,6 +1,6 @@
 package dev.jakapaw.giftcard.paymentmanager.application.event;
 
-import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
+import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -8,8 +8,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode
-public class PaymentCompleted {
+public class PaymentInitiated {
 
-    private String paymentId;
-    private PaymentStatus paymentStatus;
+    private Payment payment;
 }
