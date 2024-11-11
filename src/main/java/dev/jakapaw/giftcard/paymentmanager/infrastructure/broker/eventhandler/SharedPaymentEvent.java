@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class PaymentEvent {
+public class SharedPaymentEvent {
 
     private String giftcardSerialNumber;
     private double billAmount;
-    private boolean isVerified;
+    private String paymentStatus;
 }

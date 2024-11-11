@@ -47,7 +47,7 @@ public class PaymentService implements ApplicationEventPublisherAware {
                 command.getMerchantId(),
                 command.getBillAmount(),
                 LocalDateTime.now(),
-                PaymentStatus.ON_VERIFICATION
+                PaymentStatus.ON_PROCESS
         );
         kafkaProducer.publishVerificationEvent(payment);
 
@@ -78,7 +78,7 @@ public class PaymentService implements ApplicationEventPublisherAware {
     }
 
     public void declinePayment(String paymentId) {
-        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentStatus.COMPLETED);
+        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentStatus.DECLINED);
         applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
     }
 
