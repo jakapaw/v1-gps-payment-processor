@@ -1,4 +1,4 @@
-package dev.jakapaw.giftcard.paymentmanager.application.service;
+package dev.jakapaw.giftcard.paymentmanager.common;
 
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 
 @Service
-public class PaymentOrchestrator {
+public class OngoingPaymentRegistry {
 
     private final HashMap<String, Payment> ongoingPayments = new HashMap<>();
 

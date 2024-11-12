@@ -3,11 +3,11 @@ package dev.jakapaw.giftcard.paymentmanager.application.service;
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
 import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
+import dev.jakapaw.giftcard.paymentmanager.common.OngoingPaymentRegistry;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.scheduling.annotation.Async;
@@ -26,12 +26,12 @@ public class CommandHandler implements ApplicationEventPublisherAware {
 
     ApplicationEventPublisher applicationEventPublisher;
     KafkaProducer kafkaProducer;
-    PaymentOrchestrator paymentOrchestrator;
+    OngoingPaymentRegistry ongoingPaymentRegistry;
     PaymentEventDatastore paymentEventDatastore;
 
-    public CommandHandler(KafkaProducer kafkaProducer, PaymentOrchestrator paymentOrchestrator, PaymentEventDatastore paymentEventDatastore) {
+    public CommandHandler(KafkaProducer kafkaProducer, OngoingPaymentRegistry ongoingPaymentRegistry, PaymentEventDatastore paymentEventDatastore) {
         this.kafkaProducer = kafkaProducer;
-        this.paymentOrchestrator = paymentOrchestrator;
+        this.ongoingPaymentRegistry = ongoingPaymentRegistry;
         this.paymentEventDatastore = paymentEventDatastore;
     }
 
@@ -60,8 +60,8 @@ public class CommandHandler implements ApplicationEventPublisherAware {
         try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
             executorService.submit(() -> {
                 // make thread wait for payment transaction to complete
-                while (!paymentOrchestrator.isPaymentComplete(paymentId)) {}
-                Payment paymentFinished = paymentOrchestrator.removeOngoingPayment(paymentId);
+                while (!ongoingPaymentRegistry.isPaymentComplete(paymentId)) {}
+                Payment paymentFinished = ongoingPaymentRegistry.removeOngoingPayment(paymentId);
                 paymentEventDatastore.saveAll(paymentFinished.getPaymentEvents());
                 paymentFinished.clearEvents();
                 completableFuture.complete(paymentFinished);

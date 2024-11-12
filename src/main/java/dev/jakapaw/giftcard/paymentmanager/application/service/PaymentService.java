@@ -3,8 +3,8 @@ package dev.jakapaw.giftcard.paymentmanager.application.service;
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetPaymentHistoryQuery;
+import dev.jakapaw.giftcard.paymentmanager.common.OngoingPaymentRegistry;
 import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
@@ -12,14 +12,9 @@ import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /*
 Payment Service contains all business operation of payment processing
@@ -30,13 +25,13 @@ public class PaymentService implements ApplicationEventPublisherAware {
 
     ApplicationEventPublisher applicationEventPublisher;
     KafkaProducer kafkaProducer;
-    PaymentOrchestrator paymentOrchestrator;
+    OngoingPaymentRegistry ongoingPaymentRegistry;
     PaymentEventDatastore paymentEventDatastore;
     CommandHandler commandHandler;
 
-    public PaymentService(KafkaProducer kafkaProducer, PaymentOrchestrator paymentOrchestrator, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
+    public PaymentService(KafkaProducer kafkaProducer, OngoingPaymentRegistry ongoingPaymentRegistry, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
         this.kafkaProducer = kafkaProducer;
-        this.paymentOrchestrator = paymentOrchestrator;
+        this.ongoingPaymentRegistry = ongoingPaymentRegistry;
         this.paymentEventDatastore = paymentEventDatastore;
         this.commandHandler = commandHandler;
     }
