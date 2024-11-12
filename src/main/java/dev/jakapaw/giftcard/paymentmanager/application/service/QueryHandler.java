@@ -23,7 +23,7 @@ public class QueryHandler {
     @Async
     public CompletableFuture<List<Payment[]>> getPaymentHistory(String giftcardNumber) {
         try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
-            CompletableFuture.supplyAsync(() -> {
+            return CompletableFuture.supplyAsync(() -> {
                 List<PaymentEvent> events = paymentEventDatastore.getPaymentEventsByGiftcardSerialNumber(giftcardNumber);
 
                 List<Payment[]> groupedPayments = new ArrayList<>();
