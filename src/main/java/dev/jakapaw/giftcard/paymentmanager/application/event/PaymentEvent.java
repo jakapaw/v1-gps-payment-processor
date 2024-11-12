@@ -18,11 +18,13 @@ public class PaymentEvent {
     private Integer version;
     @JdbcTypeCode(SqlTypes.JSON)
     private Payment data;
+    private String giftcardSerialNumber;
 
-    public PaymentEvent(String streamId, Integer version, Payment data) {
+    public PaymentEvent(String streamId, Integer version, Payment data, String giftcardSerialNumber) {
         this.streamId = streamId;
         this.version = version;
         this.data = data;
+        this.giftcardSerialNumber = giftcardSerialNumber;
     }
 
     public void updateData(Payment data) {

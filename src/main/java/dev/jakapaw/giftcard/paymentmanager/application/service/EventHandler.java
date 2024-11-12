@@ -27,7 +27,8 @@ public class EventHandler {
         PaymentEvent paymentEvent = new PaymentEvent(
                 event.getPayment().getPaymentId(),
                 1,
-                event.getPayment()
+                event.getPayment(),
+                event.getPayment().getGiftcardSerialNumber()
         );
         event.getPayment().addEvent(paymentEvent);
     }
