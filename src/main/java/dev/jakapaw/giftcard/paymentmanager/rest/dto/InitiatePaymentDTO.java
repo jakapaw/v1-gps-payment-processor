@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class InitiatePayment{
+public class InitiatePaymentDTO {
 
     String giftcardSerialNumber;
     String merchantId;
