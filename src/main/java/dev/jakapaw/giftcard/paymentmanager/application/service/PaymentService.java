@@ -4,6 +4,7 @@ import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCo
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
+import dev.jakapaw.giftcard.paymentmanager.application.query.GetPaymentHistoryQuery;
 import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
@@ -31,50 +32,27 @@ public class PaymentService implements ApplicationEventPublisherAware {
     KafkaProducer kafkaProducer;
     PaymentOrchestrator paymentOrchestrator;
     PaymentEventDatastore paymentEventDatastore;
+    CommandHandler commandHandler;
 
-    public PaymentService(KafkaProducer kafkaProducer, PaymentOrchestrator paymentOrchestrator, PaymentEventDatastore paymentEventDatastore) {
+    public PaymentService(KafkaProducer kafkaProducer, PaymentOrchestrator paymentOrchestrator, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
         this.kafkaProducer = kafkaProducer;
         this.paymentOrchestrator = paymentOrchestrator;
         this.paymentEventDatastore = paymentEventDatastore;
+        this.commandHandler = commandHandler;
     }
 
-    @Async
+    @Override
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
+
     public CompletableFuture<Payment> initiatePayment(InitiatePaymentCommand command) {
-        String paymentId = generatePaymentId(command.getMerchantId());
-        Payment payment = new Payment(
-                paymentId,
-                command.getGiftcardSerialNumber(),
-                command.getMerchantId(),
-                command.getBillAmount(),
-                LocalDateTime.now(),
-                PaymentStatus.ON_PROCESS
-        );
-        kafkaProducer.publishVerificationEvent(payment);
-
-        PaymentInitiated paymentInitiated = new PaymentInitiated(payment);
-        applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, paymentInitiated));
-
-        CompletableFuture<Payment> completableFuture = new CompletableFuture<>();
-        try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-            executorService.submit(() -> {
-                // make thread wait for payment transaction to complete
-                while (!paymentOrchestrator.isPaymentComplete(paymentId)) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ignored) {}
-                }
-                Payment paymentFinished = paymentOrchestrator.removeOngoingPayment(paymentId);
-                paymentEventDatastore.saveAll(paymentFinished.getPaymentEvents());
-                paymentFinished.clearEvents();
-                completableFuture.complete(paymentFinished);
-            });
-        }
-        return completableFuture;
+        return commandHandler.initiatePayment(command);
     }
 
-    private String generatePaymentId(String merchantId) {
-        Random random = new Random();
-        return merchantId + String.format("%02d", random.nextLong(10000,1000000));
+    public void getPaymentHistory(String giftcardNumber) {
+        GetPaymentHistoryQuery query = new GetPaymentHistoryQuery(this, giftcardNumber);
+        applicationEventPublisher.publishEvent(query);
     }
 
     public void declinePayment(String paymentId) {
@@ -85,10 +63,5 @@ public class PaymentService implements ApplicationEventPublisherAware {
     public void completePayment(String paymentId) {
         PaymentCompleted event = new PaymentCompleted(paymentId, PaymentStatus.COMPLETED);
         applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
-    }
-
-    @Override
-    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
     }
 }
