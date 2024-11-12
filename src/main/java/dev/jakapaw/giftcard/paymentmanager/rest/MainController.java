@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -41,6 +42,28 @@ public class MainController {
 
     @GetMapping("/history")
     public PaymentHistoryDTO paymentHistory(@RequestParam String giftcard) {
-        paymentService.getPaymentHistory(giftcard);
+        PaymentHistoryDTO paymentHistoryDTO = new PaymentHistoryDTO(giftcard);
+
+        List<PaymentDetailDTO[]> paymentHistory = paymentService.getPaymentHistory(giftcard).thenApply(payments -> {
+            var futureResult = payments.stream().map(p -> {
+                PaymentDetailDTO[] newArr = new PaymentDetailDTO[3];
+                for (int i = 0; i < p.length; i++) {
+                    PaymentDetailDTO dto = new PaymentDetailDTO(
+                            p[i].getPaymentId(),
+                            p[i].getGiftcardSerialNumber(),
+                            p[i].getMerchantId(),
+                            p[i].getBillAmount(),
+                            p[i].getPaymentTime(),
+                            p[i].getPaymentStatus()
+                    );
+                    newArr[i] = dto;
+                }
+                return newArr;
+            }).toList();
+            return futureResult;
+        }).join();
+
+        paymentHistoryDTO.setPaymentHistory(paymentHistory);
+        return paymentHistoryDTO;
     }
 }

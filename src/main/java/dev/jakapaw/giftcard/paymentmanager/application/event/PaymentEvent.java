@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import lombok.Getter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -14,8 +15,12 @@ public class PaymentEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    @Getter
     private String streamId;
     private Integer version;
+
+    @Getter
     @JdbcTypeCode(SqlTypes.JSON)
     private Payment data;
     private String giftcardSerialNumber;

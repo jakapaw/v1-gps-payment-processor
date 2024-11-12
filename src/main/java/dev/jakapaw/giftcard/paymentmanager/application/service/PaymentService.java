@@ -14,6 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /*
@@ -28,6 +29,7 @@ public class PaymentService implements ApplicationEventPublisherAware {
     OngoingPaymentRegistry ongoingPaymentRegistry;
     PaymentEventDatastore paymentEventDatastore;
     CommandHandler commandHandler;
+    QueryHandler queryHandler;
 
     public PaymentService(KafkaProducer kafkaProducer, OngoingPaymentRegistry ongoingPaymentRegistry, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
         this.kafkaProducer = kafkaProducer;
@@ -45,9 +47,9 @@ public class PaymentService implements ApplicationEventPublisherAware {
         return commandHandler.initiatePayment(command);
     }
 
-    public void getPaymentHistory(String giftcardNumber) {
+    public CompletableFuture<List<Payment[]>> getPaymentHistory(String giftcardNumber) {
         GetPaymentHistoryQuery query = new GetPaymentHistoryQuery(this, giftcardNumber);
-        applicationEventPublisher.publishEvent(query);
+        return queryHandler.getPaymentHistory(giftcardNumber);
     }
 
     public void declinePayment(String paymentId) {

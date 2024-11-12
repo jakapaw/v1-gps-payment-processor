@@ -1,6 +1,7 @@
 package dev.jakapaw.giftcard.paymentmanager.rest.dto;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -8,7 +9,9 @@ import java.util.List;
 public class PaymentHistoryDTO {
 
     private final String giftcardSerialNumber;
-    private List<PaymentDetailDTO> paymentHistory;
+
+    @Setter
+    private List<PaymentDetailDTO[]> paymentHistory;
 
     public PaymentHistoryDTO(String giftcardSerialNumber) {
         this.giftcardSerialNumber = giftcardSerialNumber;
