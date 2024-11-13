@@ -1,14 +1,13 @@
 package dev.jakapaw.giftcard.paymentmanager.rest;
 
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
-import dev.jakapaw.giftcard.paymentmanager.application.service.CommandHandler;
+import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.application.service.PaymentService;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
+import dev.jakapaw.giftcard.paymentmanager.rest.dto.GiftcardQueryDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.InitiatePaymentDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.PaymentDetailDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.PaymentHistoryDTO;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +24,9 @@ public class MainController {
     }
 
     @PostMapping("/initiate")
-    public PaymentDetailDTO initiatePayment(@RequestBody InitiatePaymentDTO data) throws ExecutionException, InterruptedException {
+    public PaymentDetailDTO initiatePayment(@RequestBody InitiatePaymentDTO body) throws ExecutionException, InterruptedException {
         InitiatePaymentCommand command = new InitiatePaymentCommand(
-                data.getGiftcardSerialNumber(), data.getMerchantId(), data.getBilled()
+                body.getGiftcardSerialNumber(), body.getMerchantId(), body.getBilled()
         );
         Payment paymentResult = paymentService.initiatePayment(command).get();
 
@@ -42,7 +41,7 @@ public class MainController {
 
     @GetMapping("/history")
     public PaymentHistoryDTO paymentHistory(@RequestParam String giftcard) {
-        PaymentHistoryDTO paymentHistoryDTO = new PaymentHistoryDTO(giftcard);
+        PaymentHistoryDTO resBody = new PaymentHistoryDTO(giftcard);
 
         List<PaymentDetailDTO[]> paymentHistory = paymentService.getPaymentHistory(giftcard).thenApply(payments -> {
             var futureResult = payments.stream().map(p -> {
@@ -63,7 +62,21 @@ public class MainController {
             return futureResult;
         }).join();
 
-        paymentHistoryDTO.setPaymentHistory(paymentHistory);
-        return paymentHistoryDTO;
+        resBody.setPaymentHistory(paymentHistory);
+        return resBody;
+    }
+
+    @PostMapping("/balance")
+    public GiftcardQueryDTO giftcardBalance(@RequestBody GiftcardQueryDTO body) {
+        GetGiftcardStateQuery query = new GetGiftcardStateQuery(
+                this,
+                body.getGiftcardSerialNumber(),
+                body.getBalance(),
+                body.getStartTime(),
+                body.getEndTime()
+        );
+        double finalBalance = paymentService.getGiftcardStateAtTime(query).join();
+        body.setBalance(finalBalance);
+        return body;
     }
 }

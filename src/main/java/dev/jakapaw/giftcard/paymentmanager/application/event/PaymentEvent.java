@@ -9,6 +9,8 @@ import lombok.Getter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class PaymentEvent {
 
@@ -24,12 +26,14 @@ public class PaymentEvent {
     @JdbcTypeCode(SqlTypes.JSON)
     private Payment data;
     private String giftcardSerialNumber;
+    private LocalDateTime createdTime;
 
     public PaymentEvent(String streamId, Integer version, Payment data, String giftcardSerialNumber) {
         this.streamId = streamId;
         this.version = version;
         this.data = data;
         this.giftcardSerialNumber = giftcardSerialNumber;
+        this.createdTime = data.getPaymentTime();
     }
 
     public void updateData(Payment data) {

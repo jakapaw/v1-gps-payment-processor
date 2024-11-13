@@ -1,13 +1,16 @@
 package dev.jakapaw.giftcard.paymentmanager.application.service;
 
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
+import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +46,23 @@ public class QueryHandler {
                     }
                 }
                 return groupedPayments;
+            }, exec);
+        }
+    }
+
+    public CompletableFuture<Double> getGiftcardStateAtTime(GetGiftcardStateQuery query) {
+        try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
+            return CompletableFuture.supplyAsync(() -> {
+                List<PaymentEvent> events = paymentEventDatastore.getPaymentEventsAtTimeRange(
+                        query.getGiftcardSerialNumber(),
+                        query.getStartTime(),
+                        query.getEndTime());
+                double finalBalance = query.getBalance();
+                Iterator<?> iter = events.stream().map(PaymentEvent::getData).iterator();
+                while (iter.hasNext()) {
+                    finalBalance -= ((Payment) iter.next()).getBillAmount();
+                }
+                return finalBalance;
             }, exec);
         }
     }

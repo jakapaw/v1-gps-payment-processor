@@ -3,6 +3,7 @@ package dev.jakapaw.giftcard.paymentmanager.application.service;
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
+import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetPaymentHistoryQuery;
 import dev.jakapaw.giftcard.paymentmanager.common.OngoingPaymentRegistry;
 import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
@@ -50,6 +51,10 @@ public class PaymentService implements ApplicationEventPublisherAware {
     public CompletableFuture<List<Payment[]>> getPaymentHistory(String giftcardNumber) {
         GetPaymentHistoryQuery query = new GetPaymentHistoryQuery(this, giftcardNumber);
         return queryHandler.getPaymentHistory(giftcardNumber);
+    }
+
+    public CompletableFuture<Double> getGiftcardStateAtTime(GetGiftcardStateQuery query) {
+        return queryHandler.getGiftcardStateAtTime(query);
     }
 
     public void declinePayment(String paymentId) {
