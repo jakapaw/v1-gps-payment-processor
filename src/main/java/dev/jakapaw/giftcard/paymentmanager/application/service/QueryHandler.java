@@ -1,21 +1,18 @@
 package dev.jakapaw.giftcard.paymentmanager.application.service;
 
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
-import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
-import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
-import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.stereotype.Service;
+
+import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
+import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
+import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 
 @EnableAsync
 @Service
@@ -27,22 +24,22 @@ public class QueryHandler {
     public CompletableFuture<List<Payment[]>> getPaymentHistory(String giftcardNumber) {
         try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
             return CompletableFuture.supplyAsync(() -> {
-                List<PaymentEvent> events = paymentEventDatastore.getPaymentEventsByGiftcardSerialNumber(giftcardNumber);
+                List<Payment> events = paymentEventDatastore.findByGiftcard(giftcardNumber);    // payment events
 
                 List<Payment[]> groupedPayments = new ArrayList<>();
                 Payment[] arr = new Payment[3];
-                String prevStreamId = "";
+                String prevPaymentId = "";
                 int arr_i = 0;
                 for (int i = 0; i < events.size(); i++) {
-                    if (events.get(i).getStreamId().equals(prevStreamId)) {
-                        Payment payment = events.get(i).getData();
-                        arr[arr_i++] = payment;
+                    String paymentId = events.get(i).getPaymentId();
+                    if (paymentId.equals(prevPaymentId)) {
+                        arr[arr_i++] = events.get(i);
                     } else {
                         if (i > 0) groupedPayments.add(arr);
                         arr = new Payment[3];
                         arr_i = 0;
-                        prevStreamId = events.get(i).getStreamId();
-                        arr[arr_i++] = events.get(i).getData();
+                        prevPaymentId = events.get(i).getPaymentId();
+                        arr[arr_i++] = events.get(i);
                     }
                 }
                 return groupedPayments;
@@ -50,17 +47,16 @@ public class QueryHandler {
         }
     }
 
-    public CompletableFuture<Double> getGiftcardStateAtTime(GetGiftcardStateQuery query) {
+    public CompletableFuture<Double> getGiftcardBalanceAtTime(GetGiftcardStateQuery query) {
         try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
             return CompletableFuture.supplyAsync(() -> {
-                List<PaymentEvent> events = paymentEventDatastore.getPaymentEventsAtTimeRange(
+                List<Payment> events = paymentEventDatastore.findByGiftcardAndUpdateTimeBetween(
                         query.getGiftcardSerialNumber(),
                         query.getStartTime(),
                         query.getEndTime());
                 double finalBalance = query.getBalance();
-                Iterator<?> iter = events.stream().map(PaymentEvent::getData).iterator();
-                while (iter.hasNext()) {
-                    finalBalance -= ((Payment) iter.next()).getBillAmount();
+                for (var event : events) {
+                    finalBalance -= event.getBillAmount();
                 }
                 return finalBalance;
             }, exec);

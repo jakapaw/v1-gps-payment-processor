@@ -1,12 +1,13 @@
 package dev.jakapaw.giftcard.paymentmanager.common;
 
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
-import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
+import java.util.HashMap;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
+import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 
 @Service
 public class OngoingPaymentRegistry {
@@ -22,12 +23,12 @@ public class OngoingPaymentRegistry {
         if (event.getClass() == PaymentCompleted.class) {
             PaymentCompleted paymentCompleted  = (PaymentCompleted) event;
             Payment p = ongoingPayments.get(paymentCompleted.getPaymentId());
-            p.setPaymentStatus(paymentCompleted.getPaymentStatus());
+            p.updatePaymentState(paymentCompleted.getPaymentStatus());
 
         } else if (event.getClass() == PaymentDeclined.class) {
             PaymentDeclined paymentDeclined  = (PaymentDeclined) event;
             Payment p = ongoingPayments.get(paymentDeclined.getPaymentId());
-            p.setPaymentStatus(paymentDeclined.getPaymentStatus());
+            p.updatePaymentState(paymentDeclined.getPaymentStatus());
         }
     }
 

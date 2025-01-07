@@ -1,8 +1,8 @@
 package dev.jakapaw.giftcard.paymentmanager.common;
 
-import lombok.Getter;
-
 import java.util.EventObject;
+
+import lombok.Getter;
 
 /**
  * Wrapper for payment events. This class is used as a solution for object to JSON serialization error
@@ -11,11 +11,11 @@ import java.util.EventObject;
  */
 
 @Getter
-public class PaymentEventWrapper<T> extends EventObject {
+public class PaymentEvent<T> extends EventObject {
 
     T event;
 
-    public PaymentEventWrapper(Object source, T event) {
+    public PaymentEvent(Object source, T event) {
         super(source);
         this.event = event;
     }

@@ -1,5 +1,15 @@
 package dev.jakapaw.giftcard.paymentmanager.rest;
 
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.application.service.PaymentService;
@@ -8,10 +18,6 @@ import dev.jakapaw.giftcard.paymentmanager.rest.dto.GiftcardQueryDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.InitiatePaymentDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.PaymentDetailDTO;
 import dev.jakapaw.giftcard.paymentmanager.rest.dto.PaymentHistoryDTO;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -32,7 +38,7 @@ public class MainController {
 
         return new PaymentDetailDTO(
                 paymentResult.getPaymentId(),
-                paymentResult.getGiftcardSerialNumber(),
+                paymentResult.getGiftcard(),
                 paymentResult.getMerchantId(),
                 paymentResult.getBillAmount(),
                 paymentResult.getPaymentTime(),
@@ -49,7 +55,7 @@ public class MainController {
                 for (int i = 0; i < p.length; i++) {
                     PaymentDetailDTO dto = new PaymentDetailDTO(
                             p[i].getPaymentId(),
-                            p[i].getGiftcardSerialNumber(),
+                            p[i].getGiftcard(),
                             p[i].getMerchantId(),
                             p[i].getBillAmount(),
                             p[i].getPaymentTime(),

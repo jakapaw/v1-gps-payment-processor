@@ -1,6 +1,6 @@
 package dev.jakapaw.giftcard.paymentmanager.application.event;
 
-import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
+import dev.jakapaw.giftcard.paymentmanager.domain.PaymentState;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,5 +11,5 @@ import lombok.Getter;
 public class PaymentDeclined {
 
     private String paymentId;
-    private PaymentStatus paymentStatus;
+    private PaymentState paymentStatus;
 }

@@ -1,22 +1,23 @@
 package dev.jakapaw.giftcard.paymentmanager.application.service;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.stereotype.Service;
+
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetPaymentHistoryQuery;
 import dev.jakapaw.giftcard.paymentmanager.common.OngoingPaymentRegistry;
-import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
+import dev.jakapaw.giftcard.paymentmanager.common.PaymentEvent;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
-import dev.jakapaw.giftcard.paymentmanager.domain.PaymentStatus;
+import dev.jakapaw.giftcard.paymentmanager.domain.PaymentState;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 /*
 Payment Service contains all business operation of payment processing
@@ -54,16 +55,16 @@ public class PaymentService implements ApplicationEventPublisherAware {
     }
 
     public CompletableFuture<Double> getGiftcardStateAtTime(GetGiftcardStateQuery query) {
-        return queryHandler.getGiftcardStateAtTime(query);
+        return queryHandler.getGiftcardBalanceAtTime(query);
     }
 
     public void declinePayment(String paymentId) {
-        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentStatus.DECLINED);
-        applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
+        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentState.PAYMENT_DECLINED);
+        applicationEventPublisher.publishEvent(new PaymentEvent<>(this, event));
     }
 
     public void completePayment(String paymentId) {
-        PaymentCompleted event = new PaymentCompleted(paymentId, PaymentStatus.COMPLETED);
-        applicationEventPublisher.publishEvent(new PaymentEventWrapper<>(this, event));
+        PaymentCompleted event = new PaymentCompleted(paymentId, PaymentState.PAYMENT_COMPLETED);
+        applicationEventPublisher.publishEvent(new PaymentEvent<>(this, event));
     }
 }

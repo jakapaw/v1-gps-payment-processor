@@ -1,18 +1,15 @@
 package dev.jakapaw.giftcard.paymentmanager.infrastructure.repository;
 
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface PaymentEventDatastore extends JpaRepository<PaymentEvent, String> {
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    List<PaymentEvent> getPaymentEventsByGiftcardSerialNumber(String giftcardSerialNumber);
+import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
+import dev.jakapaw.giftcard.paymentmanager.domain.PaymentId;
 
-    @Query("select pe from PaymentEvent pe where pe.giftcardSerialNumber = ?1 " +
-            "and pe.createdTime > ?2 and pe.createdTime < ?3")
-    List<PaymentEvent> getPaymentEventsAtTimeRange(
-            String giftcardSerialNumber, LocalDateTime startTime, LocalDateTime endTime);
+public interface PaymentEventDatastore extends JpaRepository<Payment, PaymentId> {
+    
+    List<Payment> findByGiftcard(String giftcard);
+    List<Payment> findByGiftcardAndUpdateTimeBetween(String giftcard, LocalDateTime start, LocalDateTime end);
 }

@@ -1,11 +1,11 @@
 package dev.jakapaw.giftcard.paymentmanager.application.service;
 
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentEvent;
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
-import dev.jakapaw.giftcard.paymentmanager.common.PaymentEventWrapper;
-import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentInitiated;
+import dev.jakapaw.giftcard.paymentmanager.common.PaymentEvent;
+import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEventDatastore;
 
 @Service
 public class EventHandler {
@@ -16,20 +16,14 @@ public class EventHandler {
         this.paymentEventDatastore = paymentEventDatastore;
     }
 
-    @EventListener(PaymentEventWrapper.class)
-    public void on(PaymentEventWrapper<?> eventWrapper) {
+    @EventListener(PaymentEvent.class)
+    public void on(PaymentEvent<?> eventWrapper) {
         if (eventWrapper.getEvent().getClass() == PaymentInitiated.class) {
             handlePaymentInitiated((PaymentInitiated) eventWrapper.getEvent());
         }
     }
 
     private void handlePaymentInitiated(PaymentInitiated event) {
-        PaymentEvent paymentEvent = new PaymentEvent(
-                event.getPayment().getPaymentId(),
-                1,
-                event.getPayment(),
-                event.getPayment().getGiftcardSerialNumber()
-        );
-        event.getPayment().addEvent(paymentEvent);
+        paymentEventDatastore.save(event.getPayment());
     }
 }
