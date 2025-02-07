@@ -11,5 +11,5 @@ import dev.jakapaw.giftcard.paymentmanager.domain.PaymentId;
 public interface PaymentEventDatastore extends JpaRepository<Payment, PaymentId> {
     
     List<Payment> findByGiftcard(String giftcard);
-    List<Payment> findByGiftcardAndUpdateTimeBetween(String giftcard, LocalDateTime start, LocalDateTime end);
+    List<Payment> findByGiftcardAndCreatedAtBetween(String giftcard, LocalDateTime start, LocalDateTime end);
 }

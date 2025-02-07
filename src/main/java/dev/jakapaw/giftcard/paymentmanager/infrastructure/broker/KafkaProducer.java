@@ -1,12 +1,12 @@
 package dev.jakapaw.giftcard.paymentmanager.infrastructure.broker;
 
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.eventhandler.SharedPaymentEvent;
 
-@Service
+@Component
 public class KafkaProducer {
 
     KafkaTemplate<String, Object> kafkaTemplateJson;
@@ -17,7 +17,7 @@ public class KafkaProducer {
 
     public void publishVerificationEvent(Payment payment) {
         SharedPaymentEvent event = new SharedPaymentEvent(
-                payment.getGiftcard(), payment.getBillAmount(), payment.getPaymentStatus().name());
-        kafkaTemplateJson.send("payment.verification.start", event);
+                payment.getPaymentId(), payment.getGiftcard(), payment.getBillAmount(), payment.getPaymentState().name());
+        kafkaTemplateJson.send("payment.process.start", event);
     }
 }

@@ -50,7 +50,7 @@ public class QueryHandler {
     public CompletableFuture<Double> getGiftcardBalanceAtTime(GetGiftcardStateQuery query) {
         try (ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor()) {
             return CompletableFuture.supplyAsync(() -> {
-                List<Payment> events = paymentEventDatastore.findByGiftcardAndUpdateTimeBetween(
+                List<Payment> events = paymentEventDatastore.findByGiftcardAndCreatedAtBetween(
                         query.getGiftcardSerialNumber(),
                         query.getStartTime(),
                         query.getEndTime());

@@ -6,15 +6,14 @@ import dev.jakapaw.giftcard.paymentmanager.domain.PaymentState;
 import lombok.Getter;
 
 @Getter
-public class PaymentDeclined extends EventObject {
+public class PaymentAccepted extends EventObject {
 
     private String paymentId;
     private PaymentState paymentStatus;
-
-    public PaymentDeclined(Object source, String paymentId, PaymentState paymentStatus) {
+    
+    public PaymentAccepted(Object source, String paymentId, PaymentState paymentStatus) {
         super(source);
         this.paymentId = paymentId;
         this.paymentStatus = paymentStatus;
     }
-
 }

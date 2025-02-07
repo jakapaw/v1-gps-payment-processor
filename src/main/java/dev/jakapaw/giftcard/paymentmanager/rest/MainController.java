@@ -34,15 +34,15 @@ public class MainController {
         InitiatePaymentCommand command = new InitiatePaymentCommand(
                 body.getGiftcardSerialNumber(), body.getMerchantId(), body.getBilled()
         );
-        Payment paymentResult = paymentService.initiatePayment(command).get();
+        Payment paymentResult = paymentService.initiatePayment(command);
 
         return new PaymentDetailDTO(
                 paymentResult.getPaymentId(),
                 paymentResult.getGiftcard(),
                 paymentResult.getMerchantId(),
                 paymentResult.getBillAmount(),
-                paymentResult.getPaymentTime(),
-                paymentResult.getPaymentStatus());
+                paymentResult.getCreatedAt(),
+                paymentResult.getPaymentState());
     }
 
     @GetMapping("/history")
@@ -58,8 +58,8 @@ public class MainController {
                             p[i].getGiftcard(),
                             p[i].getMerchantId(),
                             p[i].getBillAmount(),
-                            p[i].getPaymentTime(),
-                            p[i].getPaymentStatus()
+                            p[i].getCreatedAt(),
+                            p[i].getPaymentState()
                     );
                     newArr[i] = dto;
                 }

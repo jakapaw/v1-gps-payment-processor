@@ -8,12 +8,10 @@ import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.stereotype.Service;
 
 import dev.jakapaw.giftcard.paymentmanager.application.command.InitiatePaymentCommand;
-import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentCompleted;
+import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentAccepted;
 import dev.jakapaw.giftcard.paymentmanager.application.event.PaymentDeclined;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetGiftcardStateQuery;
 import dev.jakapaw.giftcard.paymentmanager.application.query.GetPaymentHistoryQuery;
-import dev.jakapaw.giftcard.paymentmanager.common.OngoingPaymentRegistry;
-import dev.jakapaw.giftcard.paymentmanager.common.PaymentEvent;
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
 import dev.jakapaw.giftcard.paymentmanager.domain.PaymentState;
 import dev.jakapaw.giftcard.paymentmanager.infrastructure.broker.KafkaProducer;
@@ -22,20 +20,17 @@ import dev.jakapaw.giftcard.paymentmanager.infrastructure.repository.PaymentEven
 /*
 Payment Service contains all business operation of payment processing
  */
-
 @Service
 public class PaymentService implements ApplicationEventPublisherAware {
 
     ApplicationEventPublisher applicationEventPublisher;
     KafkaProducer kafkaProducer;
-    OngoingPaymentRegistry ongoingPaymentRegistry;
     PaymentEventDatastore paymentEventDatastore;
     CommandHandler commandHandler;
     QueryHandler queryHandler;
 
-    public PaymentService(KafkaProducer kafkaProducer, OngoingPaymentRegistry ongoingPaymentRegistry, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
+    public PaymentService(KafkaProducer kafkaProducer, PaymentEventDatastore paymentEventDatastore, CommandHandler commandHandler) {
         this.kafkaProducer = kafkaProducer;
-        this.ongoingPaymentRegistry = ongoingPaymentRegistry;
         this.paymentEventDatastore = paymentEventDatastore;
         this.commandHandler = commandHandler;
     }
@@ -45,11 +40,12 @@ public class PaymentService implements ApplicationEventPublisherAware {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    public CompletableFuture<Payment> initiatePayment(InitiatePaymentCommand command) {
+    public Payment initiatePayment(InitiatePaymentCommand command) {
         return commandHandler.initiatePayment(command);
     }
 
     public CompletableFuture<List<Payment[]>> getPaymentHistory(String giftcardNumber) {
+        // TODO: use Query class
         GetPaymentHistoryQuery query = new GetPaymentHistoryQuery(this, giftcardNumber);
         return queryHandler.getPaymentHistory(giftcardNumber);
     }
@@ -59,12 +55,12 @@ public class PaymentService implements ApplicationEventPublisherAware {
     }
 
     public void declinePayment(String paymentId) {
-        PaymentDeclined event = new PaymentDeclined(paymentId, PaymentState.PAYMENT_DECLINED);
-        applicationEventPublisher.publishEvent(new PaymentEvent<>(this, event));
+        PaymentDeclined event = new PaymentDeclined(this, paymentId, PaymentState.PAYMENT_DECLINED);
+        applicationEventPublisher.publishEvent(event);
     }
 
     public void completePayment(String paymentId) {
-        PaymentCompleted event = new PaymentCompleted(paymentId, PaymentState.PAYMENT_COMPLETED);
-        applicationEventPublisher.publishEvent(new PaymentEvent<>(this, event));
+        PaymentAccepted event = new PaymentAccepted(this, paymentId, PaymentState.PAYMENT_ACCEPTED);
+        applicationEventPublisher.publishEvent(event);
     }
 }

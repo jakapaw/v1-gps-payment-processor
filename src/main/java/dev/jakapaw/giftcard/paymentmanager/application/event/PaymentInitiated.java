@@ -1,14 +1,18 @@
 package dev.jakapaw.giftcard.paymentmanager.application.event;
 
+import java.util.EventObject;
+
 import dev.jakapaw.giftcard.paymentmanager.domain.Payment;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-@AllArgsConstructor
 @Getter
-@EqualsAndHashCode
-public class PaymentInitiated {
+public class PaymentInitiated extends EventObject {
 
     private Payment payment;
+
+    public PaymentInitiated(Object source, Payment payment) {
+        super(source);
+        this.payment = payment;
+    }
+
 }
